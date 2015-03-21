@@ -1,19 +1,19 @@
 #include <boost/filesystem.hpp>
+#include <boost/uuid/sha1.hpp>
 #include <iostream>
 #include <fstream>
 #include <Windows.h>
 #include "sha1.h"
 
-
 using namespace boost::filesystem;
 
 void main(int argc, char* argv[1])
 {
+	setlocale(LC_ALL, "Russian");
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 	std::string dir_path = "C:\\";
 	std::cout << "Enter the directory path:\n" << std::endl;
-
 
 	try
 	{
@@ -22,6 +22,7 @@ void main(int argc, char* argv[1])
 		if (!is_directory(path))
 			throw "\nIncorrect path, try again!\n\n";
 	}
+
 	catch (const char* msg)
 	{
 		std::cout << msg;
@@ -29,24 +30,22 @@ void main(int argc, char* argv[1])
 		std::exit(1);
 	}
 
-
 	std::ofstream fout("result.csv");//creating CSV 
 	fout << "Path" << ";" << "Name" << ";" << "Size" << ";" << "Hash" << std::endl;
-
 
 	path path = dir_path;
 	recursive_directory_iterator itr(path);
 	while (itr != recursive_directory_iterator())
 	{
 		if (!is_directory(itr->status()))
-		{	/*
+		{
 			unsigned char hash[20];
 			char hexstring[41];
 			int length = strlen(itr->path().string().c_str());
 			sha1::calc(itr->path().string().c_str(), length, hash);
 			sha1::toHexString(hash, hexstring);
-			*/
-			fout << itr->path().string() << "; " << itr->path().filename() << "; " << file_size(itr->path()) << std::endl;
+
+			fout << itr->path().string() << "; " << itr->path().filename() << "; " << file_size(itr->path()) << "; " << hexstring << std::endl;
 			++itr;
 		}
 		else
@@ -54,4 +53,7 @@ void main(int argc, char* argv[1])
 			itr = ++itr;
 		}
 	}
+	fout.close(); //closing CSV
+	std::cout << "\n" << "result.csv in project current directory" << std::endl;
+	system("pause");
 }
