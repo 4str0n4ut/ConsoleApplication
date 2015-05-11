@@ -3,7 +3,6 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <Windows.h>
 #include "sha1.h"
 
 using namespace boost::filesystem;
@@ -109,8 +108,6 @@ void wchange(std::fstream & file, const std::vector <std::string> & vec, std::st
 void main(int argc, char* argv[1])
 {
 	setlocale(LC_ALL, "Russian");
-	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);
 	std::string dir_path;
 
 	if (!exists("result.csv"))
