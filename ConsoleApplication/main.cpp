@@ -7,6 +7,27 @@
 
 using namespace boost::filesystem;
 
+unsigned long int adler(const string & str)
+{
+	unsigned int s1 = 1;
+	unsigned int s2 = 0;
+	for (unsigned int i = 0; i<str.size(); i++)
+	{
+		s1 = (s1 + str[i])%65521;
+		s2 = (s2+ s1)%65521;
+	}
+	return (s2 << 16) + s1;
+}
+
+string toHex(unsigned long int a)
+{
+	stringstream ss;
+	string s;
+	ss <<hex<< a;
+	ss >> s;
+	return s;
+}
+
 void fchange(std::fstream & file, std::vector <std::string> & vec) 
 {
 	std::string temp;
@@ -14,6 +35,7 @@ void fchange(std::fstream & file, std::vector <std::string> & vec)
 	{
 		getline(file, temp);
 		int k = 0;
+		std::string adler = "";
 		std::string dir = "";
 		std::string myhash = "";
 		for (int i = 0; i<temp.size(); i++)
@@ -30,6 +52,9 @@ void fchange(std::fstream & file, std::vector <std::string> & vec)
 				break;
 			case 3:
 				myhash = myhash + temp[i];
+				break;
+			case 4:
+				adler = adler + temp[i];
 				break;
 			default:
 				break;
@@ -52,7 +77,8 @@ void fchange(std::fstream & file, std::vector <std::string> & vec)
 		int length1 = strlen(time.c_str());
 		sha1::calc((mp.string() + time).c_str(), length + length1, hash);
 		sha1::toHexString(hash, hexstring);
-		if (exists(dir) && (hexstring != myhash))
+		boost::filesystem::path mp(dir);
+		if (exists(dir) && ((hexstring != myhash)||((toHex(adler(mp.string()+to_string(last_write_time(mp))))!=adlerHash))))
 		{
 			std::cout << "The file has been modified: " << dir << std::endl;
 		}
@@ -99,7 +125,7 @@ void wchange(std::fstream & file, const std::vector <std::string> & vec, std::st
 			sha1::calc((itr->path().string() + time).c_str(), length+length1, hash);
 			sha1::toHexString(hash, hexstring);
 
-			file << itr->path().string() << ";" << itr->path().filename() << ";" << file_size(itr->path()) << ";" << hexstring << std::endl;
+			file << itr->path().string() << ";" << itr->path().filename() << ";" << file_size(itr->path()) << ";" << hexstring <<";"<<toHex(adler(itr->path().string()+to_string(last_write_time(itr->path()))))<< std::endl;
 		}
 	}
 }
@@ -145,7 +171,7 @@ void main(int argc, char* argv[1])
 				sha1::toHexString(hash, hexstring);
 
 
-				fout << itr->path().string() << ";" << itr->path().filename() << ";" << file_size(itr->path()) << ";" << hexstring << std::endl;
+				fout << itr->path().string() << ";" << itr->path().filename() << ";" << file_size(itr->path()) << ";" << hexstring <<";"<<toHex(adler(itr->path().string()+to_string(last_write_time(itr->path()))))<< std::endl;
 				++itr;
 			}
 			else
